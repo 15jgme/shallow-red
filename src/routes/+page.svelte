@@ -95,7 +95,7 @@
                           if (result) {
                               chess.move({from: event.squareFrom, to: event.squareTo, promotion: result.piece.charAt(1)})
                               event.chessboard.setPosition(chess.fen(), true)
-                              makeEngineMove(event.chessboard)
+                              makeEngineMove(event.chessboard).then(() => {})
                           } else {
                               // promotion canceled
                               event.chessboard.enableMoveInput(inputHandler, COLOR.white)

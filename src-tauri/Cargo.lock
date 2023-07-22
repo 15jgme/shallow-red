@@ -70,6 +70,7 @@ dependencies = [
  "itertools",
  "serde",
  "serde_json",
+ "shallow_red_engine",
  "tauri",
  "tauri-build",
 ]
@@ -2381,6 +2382,14 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
+]
+
+[[package]]
+name = "shallow_red_engine"
+version = "0.1.0"
+dependencies = [
+ "chess",
+ "itertools",
 ]
 
 [[package]]

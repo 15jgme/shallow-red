@@ -1,9 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use chess::Board;
-use std::io;
 use std::str::FromStr;
-mod shallow_red_engine;
+use shallow_red_engine::engine::enter_engine;
 
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 
@@ -17,7 +16,7 @@ fn main() {
 #[tauri::command]
 fn run_engine(current_fen: &str) -> String {
   let board = Board::from_str(&current_fen).expect("Valid Position"); // setup the board
-  let engine_move = shallow_red_engine::enter_engine(board); // find the best move
+  let engine_move = enter_engine(board); // find the best move
 
   return engine_move.to_string(); // return the best move
 }

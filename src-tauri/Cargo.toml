@@ -20,6 +20,7 @@ serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "1.4.0", features = [] }
 chess = ">0.0.1"
 itertools = "0.10.5"
+shallow_red_engine = { path = "./src/shallow_red_engine"}
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
