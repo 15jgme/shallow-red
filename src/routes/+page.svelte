@@ -11,18 +11,24 @@
   } from "cm-chessboard/src/extensions/markers/Markers.js";
   import { PromotionDialog } from "cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js";
   import { Accessibility } from "cm-chessboard/src/extensions/accessibility/Accessibility.js";
-  import { Chess } from "chess.js";
+  import { Chess, DEFAULT_POSITION, validateFen } from "chess.js";
   import "$lib/assets/styles/cm-chessboard.css";
   import { onMount } from "svelte";
 
   import { invoke } from "@tauri-apps/api/tauri";
 
-  // ChessJS
-  //   let chess = new Chess('r2qkbnr/ppp2p1p/2n3p1/3ppb2/1P2P3/2NP1N2/P1P2PPP/R1BQKB1R w KQkq - 0 1');
+  // UI
+  enum engine_state_emoji {
+    Pondering = "🤔",
+    Waiting = "😁",
+  }
+  let curr_engine_state_emoj: engine_state_emoji = engine_state_emoji.Waiting;
+  let fen_error_msg: String = "";
 
   let board_el: any;
   let board: any;
   let fen: string = "8/1pn5/5k2/8/6P1/3K1N2/8/8 w - - 0 1";
+  fen = DEFAULT_POSITION;
   let engine_move: string = "";
 
   // ChessJS
@@ -39,24 +45,35 @@
   };
 
   function reload_chess() {
-    // Reset ChessJS
-    chess = new Chess(fen);
+    // Validate fen first
+    let { ok, error } = validateFen(fen);
 
-    // Delete old UI
-    // board.destroy();
+    if (ok) { 
+      fen_error_msg = "" // Erase error message
 
-    // Reset UI
-    let board_config = {
-      position: chess.fen(),
-      extensions: [
-        { class: Markers, props: { autoMarkers: MARKER_TYPE.square } },
-        { class: PromotionDialog },
-        { class: Accessibility, props: { visuallyHidden: true } },
-      ],
-    };
-    // board = new Chessboard(board_el, board_config);
-    board.setPosition(chess.fen(), true);
-    board.enableMoveInput(inputHandler, COLOR.white);
+      // Reset engine emoji
+      curr_engine_state_emoj = engine_state_emoji.Waiting;
+
+      // Reset ChessJS
+      chess = new Chess(fen);
+
+      // Reset UI
+      let board_config = {
+        position: chess.fen(),
+        extensions: [
+          { class: Markers, props: { autoMarkers: MARKER_TYPE.square } },
+          { class: PromotionDialog },
+          { class: Accessibility, props: { visuallyHidden: true } },
+        ],
+      };
+      // board = new Chessboard(board_el, board_config);
+      board.setPosition(chess.fen(), true);
+      board.enableMoveInput(inputHandler, COLOR.white);
+    } else if (error){
+      fen_error_msg = error;
+    } else {
+      fen_error_msg = "invalid fen"
+    }
   }
 
   async function makeEngineMove(chessboard: any) {
@@ -101,15 +118,15 @@
         promotion: event.promotion,
       };
       const result = chess.move(move);
-      console.log(result);
-      console.log(board.state);
-      console.log(board.state.moveInputProcess);
       if (result) {
         board.state.moveInputProcess.then(() => {
           // wait for the move input process has finished
           board.setPosition(chess.fen(), true).then(() => {
             // update position, maybe castled and wait for animation has finished
-            makeEngineMove(event.chessboard);
+            curr_engine_state_emoj = engine_state_emoji.Pondering;
+            makeEngineMove(event.chessboard).then(() => {
+              curr_engine_state_emoj = engine_state_emoji.Waiting;
+            });
           });
         });
       } else {
@@ -161,10 +178,11 @@
 </script>
 
 <div class="p-2 flex flex-col items-center justify-center h-screen">
+  <div><p>Engine state: {curr_engine_state_emoj}</p></div>
   <div class="w-1/2" bind:this={board_el} />
-  
-  <div class="py-2">
-    <p>Initial FEN:</p>
+
+  <div class="flex space-x-2 py-2">
+    <p class="">FEN:</p>
     <input
       class="shadow appearance-none border rounded w-3/4 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
       bind:value={fen}
@@ -175,6 +193,10 @@
       on:click={reload_chess}>Reload</button
     >
   </div>
+  <p class="font-extralight text-red-300">{fen_error_msg}</p>
+  {#if fen_error_msg != ""}
+    <button class="bg-red-500 hover:bg-red-700 text-white font-bold px-2 rounded" on:click={() => {fen = DEFAULT_POSITION; reload_chess()}}>Total FEN reset?</button>
+  {/if}
 </div>
 
 <!-- <style>
