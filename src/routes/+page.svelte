@@ -13,6 +13,8 @@
   import { Accessibility } from "cm-chessboard/src/extensions/accessibility/Accessibility.js";
   import { Chess, DEFAULT_POSITION, validateFen } from "chess.js";
   import "$lib/assets/styles/cm-chessboard.css";
+  import "$lib/assets/extensions/promotion-dialog/promotion-dialog.css";
+  import "$lib/assets/extensions/markers/markers.css"
   import { onMount } from "svelte";
 
   import { invoke } from "@tauri-apps/api/tauri";
@@ -117,7 +119,14 @@
         to: event.squareTo,
         promotion: event.promotion,
       };
-      const result = chess.move(move);
+      
+      let result = undefined;
+      try {
+        result = chess.move(move);
+      } catch(e) {
+        console.log(e);
+      }
+
       if (result) {
         board.state.moveInputProcess.then(() => {
           // wait for the move input process has finished
