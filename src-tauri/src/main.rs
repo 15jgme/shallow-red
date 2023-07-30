@@ -16,7 +16,7 @@ fn main() {
 async fn run_engine(current_fen: String) -> EngineReturn {
   let board = Board::from_str(&current_fen).expect("Valid Position"); // setup the board
 
-  let (chess_move, engine_result_maybe) = enter_engine(board).await; // find the best move
+  let (chess_move, engine_result_maybe) = enter_engine(board, Some(true)).await; // find the best move
   match engine_result_maybe {
     Some(engine_result) => return engine_result,
     None => return EngineReturn{engine_move: chess_move.to_string(), engine_stats: Default::default()},
